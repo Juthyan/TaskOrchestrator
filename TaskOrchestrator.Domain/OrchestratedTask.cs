@@ -43,7 +43,7 @@ public class OrchestratedTask
     {
         if (Status != TaskState.Pending)
         {
-            throw new DomainException("Something happend");
+            throw new DomainException("Cannot start a task that is not pending");
         }
 
         Status = TaskState.Running;
@@ -55,7 +55,7 @@ public class OrchestratedTask
     {
         if (Status != TaskState.Running)
         {
-            throw new Exception();
+            throw new DomainException("Cannot succeed a task that is not Running.");
         }
 
         Attempts++;
@@ -68,26 +68,34 @@ public class OrchestratedTask
     {
         if (Status != TaskState.Running)
         {
-            throw new Exception();
+            throw new DomainException("Cannot fail a task that is not Running.");
         }
 
         Attempts++;
         Status = TaskState.Failed;
         Touch();
-
-
     }
 
-    public void Archived()
+    public void Cancelled()
+    {
+        if (Status != TaskState.Pending)
+        {
+            throw new DomainException("Cannot fail a task that is not Running.");
+        }
+
+        Status = TaskState.Cancelled;
+        Touch();
+    }
+
+     public void Archived()
     {
         if (Status != TaskState.Succeeded || Status != TaskState.Failed)
         {
             throw new DomainException("Something happend");
         }
 
-        Status = TaskState.Cancelled;
+        Status = TaskState.Archived;
         Touch();
-
     }
 
     public void Retry()
