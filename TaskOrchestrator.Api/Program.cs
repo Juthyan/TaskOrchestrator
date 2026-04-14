@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddSingleton<ITaskRepository, InMemoryTaskRepository>();
-builder.Services.AddSingleton<Channel<OrchestratedTask>>(Channel.CreateBounded<OrchestratedTask>(100));
+builder.Services.AddSingleton<TaskChannels>();
 builder.Services.AddHostedService<TaskWorker>();
 builder.Services.AddScoped<EnqueueTaskCommandHandler>();
 builder.Services.ConfigureHttpJsonOptions(options =>
