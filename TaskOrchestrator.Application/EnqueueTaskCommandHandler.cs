@@ -1,19 +1,26 @@
 ﻿namespace TaskOrchestrator.Application;
 
-using System.Threading.Channels;
 using TaskOrchestrator.Domain;
 
 
-public class EnqueueTaskCommandHandler(ITaskRepository taskRepository, Channel<OrchestratedTask> channel)
+public class EnqueueTaskCommandHandler(ITaskRepository taskRepository, TaskChannels channel)
 {
     private readonly ITaskRepository _taskRepository = taskRepository;
-    private readonly Channel<OrchestratedTask> _channel = channel;
+    private readonly TaskChannels _channel = channel;
 
-    public async Task<Guid>  HandleAsync(EnqueueTaskCommand command, CancellationToken ct = default)
+    public async Task<Guid>HandleAsync(EnqueueTaskCommand command, CancellationToken ct = default)
     {
         var task = OrchestratedTask.CreateNew(command.Type);
         await _taskRepository.AddAsync(task,ct);
-        await _channel.Writer.WriteAsync(task, ct);
+        if (command.Type == TaskType.Simulation)
+        {
+            await _channel.HighPriority.Writer.WriteAsync(task, ct);
+        }
+        else
+        {
+             await _channel.LowPriority.Writer.WriteAsync(task, ct);
+        }
+       
         return task.Id;
     }
 }
