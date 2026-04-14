@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
+using System.Threading.Channels;
 using TaskOrchestrator.Application;
+using TaskOrchestrator.Domain;
 using TaskOrchestrator.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +10,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddSingleton<ITaskRepository, InMemoryTaskRepository>();
+builder.Services.AddSingleton<Channel<OrchestratedTask>>(Channel.CreateBounded<OrchestratedTask>(100));
+builder.Services.AddHostedService<TaskWorker>();
 builder.Services.AddScoped<EnqueueTaskCommandHandler>();
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
