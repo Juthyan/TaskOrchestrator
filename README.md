@@ -101,7 +101,7 @@ GET /tasks/{id}
 - [x] `TaskWorker` — `BackgroundService` consuming `Channel<OrchestratedTask>`
 - [x] Async pipeline — `Channel<T>` with bounded capacity (backpressure)
 - [x] Minimal API — `POST /tasks`, `GET /tasks/{id}`
-- [ ] Priority — Simulation > Monitoring (two channels)
+- [x] Priority — Simulation > Monitoring (two channels)
 - [ ] Max concurrency — ≤ 4 workers in parallel
 - [ ] `POST /tasks/{id}/retry` and `POST /tasks/{id}/cancel` endpoints
 - [ ] Unit tests — domain invariants and application use cases
