@@ -13,6 +13,8 @@ builder.Services.AddSingleton<ITaskRepository, InMemoryTaskRepository>();
 builder.Services.AddSingleton<TaskChannels>();
 builder.Services.AddHostedService<TaskWorker>();
 builder.Services.AddScoped<EnqueueTaskCommandHandler>();
+builder.Services.AddScoped<RestartTaskCommandHandler>();
+
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
@@ -36,9 +38,15 @@ app.MapPost("/tasks", async (EnqueueTaskCommand command, EnqueueTaskCommandHandl
 
 app.MapGet("/tasks/{id}", async (Guid id, ITaskRepository taskRepository, CancellationToken ct) =>
 {
-    var task =  await taskRepository.GetAsync(id, ct);
+    var task = await taskRepository.GetAsync(id, ct);
     return task is null ? Results.NotFound() : Results.Ok(task);
+});
 
+app.MapPost("/tasks/{id}/restart", async (Guid id, RestartTaskCommandHandler handler, CancellationToken ct) =>
+{
+    var command = new RestartTaskCommand(id);
+    var taskId = await handler.HandleAsync(command, ct);
+    return Results.Ok(new { id = taskId });
 });
 
 app.Run();

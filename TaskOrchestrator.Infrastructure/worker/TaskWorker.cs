@@ -58,6 +58,17 @@ public class TaskWorker : BackgroundService
         {
             task.Fail();
             await _repository.UpdateAsync(task, stoppingToken);
+
+            if (task.Attempts < task.MaxAttempts)
+            {
+                task.Retry();
+                await _repository.UpdateAsync(task, stoppingToken);
+
+                if (task.Type == TaskType.Simulation)
+                    await _channels.HighPriority.Writer.WriteAsync(task, stoppingToken);
+                else
+                    await _channels.LowPriority.Writer.WriteAsync(task, stoppingToken);
+            }
         }
     }
 }
