@@ -88,6 +88,20 @@ public class OrchestratedTask
         Touch();
     }
 
+
+    public void ReStart()
+    {
+        if (Status != TaskState.Failed)
+        throw new DomainException($"Can only restart a Failed task, current status is {Status}.");
+
+        if (Attempts < MaxAttempts)
+            throw new DomainException("Automatic retry not exhausted, cannot restart this task.");
+
+        Status = TaskState.Pending;
+        Attempts = 0;
+        Touch();
+    }
+
     private void Touch()
     {
         LastUpdatedAtUtc = DateTime.UtcNow;
