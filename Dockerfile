@@ -18,7 +18,7 @@ RUN dotnet publish TaskOrchestrator.Api/TaskOrchestrator.Api.csproj -c Release -
 
 # Stage 2 — Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
-# seulement le code compilé — image plus légère
+RUN apt-get update && apt-get install -y libgssapi-krb5-2 && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "TaskOrchestrator.Api.dll"]
