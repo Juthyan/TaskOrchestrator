@@ -4,3 +4,6 @@ obj/
 .vscode/
 .DS_Store
 appsettings.Development.json
+*.db
+*.db-wal
+*.db-shm
