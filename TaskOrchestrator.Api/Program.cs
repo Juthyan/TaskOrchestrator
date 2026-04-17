@@ -1,7 +1,8 @@
 using System.Text.Json.Serialization;
-using System.Threading.Channels;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using TaskOrchestrator.Application;
 using TaskOrchestrator.Domain;
 using TaskOrchestrator.Infrastructure;
@@ -18,6 +19,13 @@ builder.Services.AddScoped<RestartTaskCommandHandler>();
 builder.Services.AddScoped<CancelTaskCommandHandler>();
 builder.Services.AddDbContext<TaskOrchestratorDbContext>(options =>options.UseSqlite("Data Source=tasks.db"));
 builder.Services.AddScoped<ITaskRepository, EfCoreTaskRepository>();
+builder.Services.AddOpenTelemetry()
+    .WithTracing(tracing => tracing
+        .AddAspNetCoreInstrumentation()
+        .AddConsoleExporter())
+    .WithMetrics(metrics => metrics
+        .AddAspNetCoreInstrumentation()
+        .AddConsoleExporter());
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
