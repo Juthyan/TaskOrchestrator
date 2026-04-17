@@ -19,7 +19,7 @@ builder.Services.AddHostedService<TaskWorker>();
 builder.Services.AddScoped<EnqueueTaskCommandHandler>();
 builder.Services.AddScoped<RestartTaskCommandHandler>();
 builder.Services.AddScoped<CancelTaskCommandHandler>();
-builder.Services.AddDbContext<TaskOrchestratorDbContext>(options =>options.UseSqlite("Data Source=tasks.db"));
+builder.Services.AddDbContext<TaskOrchestratorDbContext>(options =>options.UseSqlite("Data Source=/app/data/tasks.db"));
 builder.Services.AddScoped<ITaskRepository, EfCoreTaskRepository>();
 builder.Services.AddOpenTelemetry()
     .WithTracing(tracing => tracing
@@ -43,7 +43,7 @@ app.UseExceptionHandler(errorApp =>
     errorApp.Run(async context =>
     {
         var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
-        
+
         if (exception is DomainException domainEx)
         {
             context.Response.StatusCode = 400;
@@ -57,6 +57,12 @@ app.UseExceptionHandler(errorApp =>
         }
     });
 });
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<TaskOrchestratorDbContext>();
+    db.Database.Migrate();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
