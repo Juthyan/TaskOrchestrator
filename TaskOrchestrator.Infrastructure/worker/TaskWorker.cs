@@ -1,5 +1,6 @@
 namespace TaskOrchestrator.Infrastructure;
 
+using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -11,13 +12,15 @@ public class TaskWorker : BackgroundService
     private readonly TaskChannels _channels;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<TaskWorker> _logger;
+    private readonly TaskMetrics _metrics;
 
 
-    public TaskWorker(TaskChannels channels, IServiceScopeFactory scopeFactory, ILogger<TaskWorker> logger)
+    public TaskWorker(TaskChannels channels, IServiceScopeFactory scopeFactory, ILogger<TaskWorker> logger, TaskMetrics metrics)
     {
         _channels = channels;
         _scopeFactory = scopeFactory;
         _logger = logger;
+        _metrics = metrics;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -53,6 +56,7 @@ public class TaskWorker : BackgroundService
     {
         using var scope = _scopeFactory.CreateScope();
         var repository = scope.ServiceProvider.GetRequiredService<ITaskRepository>();
+        var stopwatch = Stopwatch.StartNew();
 
         try
         {
@@ -64,14 +68,14 @@ public class TaskWorker : BackgroundService
             task.Succeed();
             await repository.UpdateAsync(task, stoppingToken);
             _logger.LogInformation("Task {TaskId} of type {TaskType} succeeded", task.Id, task.Type);
-
+            _metrics.TaskCompleted("Succeeded");
         }
         catch (Exception)
         {
             task.Fail();
             await repository.UpdateAsync(task, stoppingToken);
             _logger.LogWarning("Task {TaskId} failed, retrying attempt {Attempts}/{MaxAttempts}", task.Id, task.Attempts, task.MaxAttempts);
-
+            _metrics.TaskCompleted("Failed");
 
             if (task.Attempts < task.MaxAttempts)
             {
@@ -94,5 +98,7 @@ public class TaskWorker : BackgroundService
                 _logger.LogError("Task {TaskId} exhausted all {MaxAttempts} attempts", task.Id, task.MaxAttempts);
             }
         }
+        stopwatch.Stop();
+        _metrics.RecordDuration(stopwatch.Elapsed.TotalMilliseconds);
     }
 }
