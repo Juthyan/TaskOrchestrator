@@ -19,7 +19,13 @@ builder.Services.AddHostedService<TaskWorker>();
 builder.Services.AddScoped<EnqueueTaskCommandHandler>();
 builder.Services.AddScoped<RestartTaskCommandHandler>();
 builder.Services.AddScoped<CancelTaskCommandHandler>();
-builder.Services.AddDbContext<TaskOrchestratorDbContext>(options =>options.UseSqlite("Data Source=/app/data/tasks.db"));
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+    ?? "Data Source=tasks.db";
+
+builder.Services.AddDbContext<TaskOrchestratorDbContext>(options => 
+    options.UseNpgsql(connectionString));
+
 builder.Services.AddScoped<ITaskRepository, EfCoreTaskRepository>();
 builder.Services.AddOpenTelemetry()
     .WithTracing(tracing => tracing
