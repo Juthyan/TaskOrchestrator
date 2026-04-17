@@ -13,14 +13,15 @@ public class TaskWorker : BackgroundService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<TaskWorker> _logger;
     private readonly TaskMetrics _metrics;
+    private readonly TaskActivitySource _taskActivitySource;
 
-
-    public TaskWorker(TaskChannels channels, IServiceScopeFactory scopeFactory, ILogger<TaskWorker> logger, TaskMetrics metrics)
+    public TaskWorker(TaskChannels channels, IServiceScopeFactory scopeFactory, ILogger<TaskWorker> logger, TaskMetrics metrics, TaskActivitySource taskActivitySource)
     {
         _channels = channels;
         _scopeFactory = scopeFactory;
         _logger = logger;
         _metrics = metrics;
+        _taskActivitySource = taskActivitySource;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -57,6 +58,7 @@ public class TaskWorker : BackgroundService
         using var scope = _scopeFactory.CreateScope();
         var repository = scope.ServiceProvider.GetRequiredService<ITaskRepository>();
         var stopwatch = Stopwatch.StartNew();
+        using var activity = _taskActivitySource.StartProcessTask(task.Id.ToString(), task.Type.ToString());
 
         try
         {

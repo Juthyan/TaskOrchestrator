@@ -14,6 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddSingleton<TaskChannels>();
 builder.Services.AddSingleton<TaskMetrics>();
+builder.Services.AddSingleton<TaskActivitySource>();
 builder.Services.AddHostedService<TaskWorker>();
 builder.Services.AddScoped<EnqueueTaskCommandHandler>();
 builder.Services.AddScoped<RestartTaskCommandHandler>();
@@ -23,6 +24,7 @@ builder.Services.AddScoped<ITaskRepository, EfCoreTaskRepository>();
 builder.Services.AddOpenTelemetry()
     .WithTracing(tracing => tracing
         .AddAspNetCoreInstrumentation()
+        .AddSource("TaskOrchestrator")
         .AddConsoleExporter())
     .WithMetrics(metrics => metrics
         .AddAspNetCoreInstrumentation()
