@@ -13,6 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddSingleton<TaskChannels>();
+builder.Services.AddSingleton<TaskMetrics>();
 builder.Services.AddHostedService<TaskWorker>();
 builder.Services.AddScoped<EnqueueTaskCommandHandler>();
 builder.Services.AddScoped<RestartTaskCommandHandler>();
@@ -25,6 +26,7 @@ builder.Services.AddOpenTelemetry()
         .AddConsoleExporter())
     .WithMetrics(metrics => metrics
         .AddAspNetCoreInstrumentation()
+        .AddMeter("TaskOrchestrator")
         .AddConsoleExporter());
 
 builder.Services.ConfigureHttpJsonOptions(options =>
