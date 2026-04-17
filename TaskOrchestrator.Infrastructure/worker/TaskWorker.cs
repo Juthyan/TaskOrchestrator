@@ -68,6 +68,10 @@ public class TaskWorker : BackgroundService
                 task.Retry();
                 await repository.UpdateAsync(task, stoppingToken);
 
+                var jitter = Random.Shared.NextDouble() * 1000;
+                var delay = TimeSpan.FromSeconds(Math.Pow(2, task.Attempts)) + TimeSpan.FromMilliseconds(jitter);
+                await Task.Delay(delay, stoppingToken);
+
                 if (task.Type == TaskType.Simulation)
                     await _channels.HighPriority.Writer.WriteAsync(task, stoppingToken);
                 else
