@@ -20,13 +20,15 @@ builder.Services.AddScoped<EnqueueTaskCommandHandler>();
 builder.Services.AddScoped<RestartTaskCommandHandler>();
 builder.Services.AddScoped<CancelTaskCommandHandler>();
 
-var connectionString = Environment.GetEnvironmentVariable("PGHOST") != null
-    ? $"Host={builder.Configuration["PGHOST"]};Port={builder.Configuration["PGPORT"]};Database={builder.Configuration["PGDATABASE"]};Username={builder.Configuration["PGUSER"]};Password={builder.Configuration["PGPASSWORD"]}"
-    : builder.Configuration.GetConnectionString("DefaultConnection") ?? "Host=localhost;Database=taskdb;Username=postgres;Password=postgres";
+var pgHost = Environment.GetEnvironmentVariable("PGHOST");
+var connectionString = pgHost != null
+    ? $"Host={pgHost};Port={Environment.GetEnvironmentVariable("PGPORT")};Database={Environment.GetEnvironmentVariable("PGDATABASE")};Username={Environment.GetEnvironmentVariable("PGUSER")};Password={Environment.GetEnvironmentVariable("PGPASSWORD")}"
+    : builder.Configuration.GetConnectionString("DefaultConnection") 
+      ?? "Host=localhost;Database=taskdb;Username=postgres;Password=postgres";
 
 builder.Services.AddDbContext<TaskOrchestratorDbContext>(options => 
     options.UseNpgsql(connectionString));
-    
+
 builder.Services.AddScoped<ITaskRepository, EfCoreTaskRepository>();
 builder.Services.AddOpenTelemetry()
     .WithTracing(tracing => tracing
