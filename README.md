@@ -42,30 +42,37 @@ The solution is structured in 4 main layers, following a DDD-inspired layered ar
   - Domain rules:
     - Simulations have higher priority than Monitoring
     - Max attempts / retry policy enforced in domain
-    - Strict allowed status transitions (Start, Succeed, Fail, Cancel, Archive, Retry)
+    - Strict allowed status transitions (Start, Succeed, Fail, Cancel, Archive, Restart, Retry)
 
 - `TaskOrchestrator.Application`  
   Application layer — use cases and contracts:
   - `EnqueueTaskCommand` + `EnqueueTaskCommandHandler`
+  - `RestartTaskCommand` + `RestartTaskCommandHandler`
+  - `CancelTaskCommand` + `CancelTaskCommandHandler`
   - `ITaskRepository` — async interface with `CancellationToken`
-  - Coming: `RetryTaskCommand`, `CancelTaskCommand`, `ITaskClassifier`
+  - `TaskChannels` — dual channel priority wrapper
+  - Coming: `ITaskClassifier`
 
 - `TaskOrchestrator.Infrastructure`  
   Infrastructure layer — concrete implementations:
-  - `InMemoryTaskRepository` — `ConcurrentDictionary`, thread-safe
-  - `TaskWorker` — `BackgroundService`, consumes `Channel<OrchestratedTask>`
-  - Coming: priority channels, database persistence, AI classifier
+  - `InMemoryTaskRepository` — `ConcurrentDictionary`, thread-safe (used for testing)
+  - `EfCoreTaskRepository` — Entity Framework Core with SQLite persistence
+  - `TaskWorker` — `BackgroundService`, 4 parallel workers, dual channel priority
+  - Coming: AI classifier via external API
 
 - `TaskOrchestrator.API`  
   Minimal API to pilot the system:
   - `POST /tasks` — enqueue a task
   - `GET /tasks/{id}` — inspect task state
-  - Coming: `POST /tasks/{id}/retry`, `POST /tasks/{id}/cancel`
+  - `POST /tasks/{id}/restart` — manually restart a failed task
+  - `POST /tasks/{id}/cancel` — cancel a pending task
+  - Global exception middleware — `DomainException` → 400, unhandled → 500
 
 **Tests:**
 
-- `TaskOrchestrator.Domain.Tests` — domain invariants and status transitions
-- `TaskOrchestrator.Application.Tests` — use cases and orchestration logic
+- `TaskOrchestrator.Domain.Tests` — 11 tests, domain invariants and state transitions
+- `TaskOrchestrator.Application.Tests` — Enqueue, Restart, Cancel handlers with Moq
+
 
 ---
 
