@@ -1,5 +1,6 @@
 namespace TaskOrchestrator.Infrastructure;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using TaskOrchestrator.Application;
 using TaskOrchestrator.Domain;
@@ -7,12 +8,12 @@ using TaskOrchestrator.Domain;
 public class TaskWorker : BackgroundService
 {
     private readonly TaskChannels _channels;
-    private readonly ITaskRepository _repository;
+    private readonly IServiceScopeFactory _scopeFactory;
 
-    public TaskWorker(TaskChannels channels, ITaskRepository repository)
+    public TaskWorker(TaskChannels channels, IServiceScopeFactory scopeFactory)
     {
         _channels = channels;
-        _repository = repository;
+        _scopeFactory = scopeFactory;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -46,23 +47,26 @@ public class TaskWorker : BackgroundService
 
     private async Task ProcessAsync(OrchestratedTask task, CancellationToken stoppingToken)
     {
+        using var scope = _scopeFactory.CreateScope();
+        var repository = scope.ServiceProvider.GetRequiredService<ITaskRepository>();
+
         try
         {
             task.Start();
-            await _repository.UpdateAsync(task, stoppingToken);
+            await repository.UpdateAsync(task, stoppingToken);
             await Task.Delay(1000, stoppingToken);
             task.Succeed();
-            await _repository.UpdateAsync(task, stoppingToken);
+            await repository.UpdateAsync(task, stoppingToken);
         }
         catch (Exception)
         {
             task.Fail();
-            await _repository.UpdateAsync(task, stoppingToken);
+            await repository.UpdateAsync(task, stoppingToken);
 
             if (task.Attempts < task.MaxAttempts)
             {
                 task.Retry();
-                await _repository.UpdateAsync(task, stoppingToken);
+                await repository.UpdateAsync(task, stoppingToken);
 
                 if (task.Type == TaskType.Simulation)
                     await _channels.HighPriority.Writer.WriteAsync(task, stoppingToken);
