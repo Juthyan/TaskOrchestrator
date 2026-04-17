@@ -2,12 +2,12 @@ namespace TaskOrchestrator.Domain;
 
 public class OrchestratedTask
 {
-    public Guid Id { get; }
+    public Guid Id { get; init; }
     public TaskState Status { get; private set; } = TaskState.Pending;
-    public TaskType Type { get; private set; }
+    public TaskType Type { get; init; }
     public int Attempts { get; private set; }
-    public int MaxAttempts { get; }
-    public DateTime CreatedAtUtc { get; }
+    public int MaxAttempts { get; init; }
+    public DateTime CreatedAtUtc { get; init; }
     public DateTime? LastUpdatedAtUtc { get; private set; }
 
     private OrchestratedTask() { }

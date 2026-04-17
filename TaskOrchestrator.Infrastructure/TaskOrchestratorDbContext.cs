@@ -10,8 +10,6 @@ public class TaskOrchestratorDbContext(DbContextOptions<TaskOrchestratorDbContex
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.UsePropertyAccessMode(PropertyAccessMode.PreferFieldDuringConstruction);
-
         modelBuilder.Entity<OrchestratedTask>(entity =>
         {
             entity.HasKey(t => t.Id);
