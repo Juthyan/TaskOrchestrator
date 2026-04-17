@@ -116,10 +116,10 @@ GET /tasks/{id}
 ### V2 — Reliability and observability
 
 - [x] Persist tasks in a real store (SQLite / EF Core)
-- [ ] Retry and backoff policy
-- [ ] Structured logging — OpenTelemetry
-- [ ] Metrics — tasks by status, latency, queue depth
-- [ ] Traces — end-to-end request tracing
+- [x] Retry and backoff policy
+- [x] Structured logging — OpenTelemetry
+- [x] Metrics — tasks by status, latency, queue depth
+- [x] Traces — end-to-end request tracing
 
 ### V3 — Dashboard (React)
 
