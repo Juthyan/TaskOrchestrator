@@ -20,7 +20,20 @@ builder.Services.AddScoped<EnqueueTaskCommandHandler>();
 builder.Services.AddScoped<RestartTaskCommandHandler>();
 builder.Services.AddScoped<CancelTaskCommandHandler>();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+string connectionString;
+
+if (databaseUrl != null)
+{
+    var uri = new Uri(databaseUrl);
+    var userInfo = uri.UserInfo.Split(':');
+    connectionString = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]}";
+}
+else
+{
+    connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? "Host=localhost;Database=taskdb;Username=postgres;Password=postgres";
+}
 
 builder.Services.AddDbContext<TaskOrchestratorDbContext>(options => 
     options.UseNpgsql(connectionString));
