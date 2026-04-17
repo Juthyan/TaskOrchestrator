@@ -12,8 +12,8 @@ using TaskOrchestrator.Infrastructure;
 namespace TaskOrchestrator.Infrastructure.Migrations
 {
     [DbContext(typeof(TaskOrchestratorDbContext))]
-    [Migration("20260417185123_PostgresInitial")]
-    partial class PostgresInitial
+    [Migration("20260417202732_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
