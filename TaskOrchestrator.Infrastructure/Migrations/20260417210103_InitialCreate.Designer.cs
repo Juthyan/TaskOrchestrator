@@ -12,7 +12,7 @@ using TaskOrchestrator.Infrastructure;
 namespace TaskOrchestrator.Infrastructure.Migrations
 {
     [DbContext(typeof(TaskOrchestratorDbContext))]
-    [Migration("20260417202732_InitialCreate")]
+    [Migration("20260417210103_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -34,8 +34,14 @@ namespace TaskOrchestrator.Infrastructure.Migrations
                     b.Property<int>("Attempts")
                         .HasColumnType("integer");
 
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime?>("LastUpdatedAtUtc")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("MaxAttempts")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Status")
                         .IsRequired()

@@ -31,8 +31,14 @@ namespace TaskOrchestrator.Infrastructure.Migrations
                     b.Property<int>("Attempts")
                         .HasColumnType("integer");
 
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime?>("LastUpdatedAtUtc")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("MaxAttempts")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Status")
                         .IsRequired()
