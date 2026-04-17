@@ -104,11 +104,11 @@ GET /tasks/{id}
 - [x] Priority — Simulation > Monitoring (two channels)
 - [x] Max concurrency — ≤ 4 workers in parallel
 - [x] `POST /tasks/{id}/retry` and `POST /tasks/{id}/cancel` endpoints
-- [ ] Unit tests — domain invariants and application use cases
+- [x] Unit tests — domain invariants and application use cases
 
 ### V2 — Reliability and observability
 
-- [ ] Persist tasks in a real store (SQLite / EF Core)
+- [x] Persist tasks in a real store (SQLite / EF Core)
 - [ ] Retry and backoff policy
 - [ ] Structured logging — OpenTelemetry
 - [ ] Metrics — tasks by status, latency, queue depth
@@ -120,6 +120,12 @@ GET /tasks/{id}
 - [ ] Filters by type and status
 - [ ] Actions — retry and cancel from the UI
 - [ ] Error handling and edge case UX
+
+### V4 — Security
+- [ ] OAuth 2.0 / JWT authentication
+- [ ] Identity Provider — Keycloak (open source) or Azure AD
+- [ ] SSO (Single Sign-On)
+- [ ] API Key middleware for public endpoints
 
 ---
 

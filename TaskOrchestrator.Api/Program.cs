@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using System.Threading.Channels;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.EntityFrameworkCore;
 using TaskOrchestrator.Application;
 using TaskOrchestrator.Domain;
 using TaskOrchestrator.Infrastructure;
@@ -10,12 +11,13 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
-builder.Services.AddSingleton<ITaskRepository, InMemoryTaskRepository>();
 builder.Services.AddSingleton<TaskChannels>();
 builder.Services.AddHostedService<TaskWorker>();
 builder.Services.AddScoped<EnqueueTaskCommandHandler>();
 builder.Services.AddScoped<RestartTaskCommandHandler>();
 builder.Services.AddScoped<CancelTaskCommandHandler>();
+builder.Services.AddDbContext<TaskOrchestratorDbContext>(options =>options.UseSqlite("Data Source=tasks.db"));
+builder.Services.AddScoped<ITaskRepository, EfCoreTaskRepository>();
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
