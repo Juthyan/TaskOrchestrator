@@ -8,3 +8,9 @@ appsettings.Development.json
 *.db-wal
 *.db-shm
 appsettings.json
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
