@@ -54,7 +54,19 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
+
+app.UseCors();
 
 app.UseExceptionHandler(errorApp =>
 {
@@ -94,6 +106,12 @@ app.MapPost("/tasks", async (EnqueueTaskCommand command, EnqueueTaskCommandHandl
 {
     var id = await handler.HandleAsync(command, ct);
     return Results.Created($"/tasks/{id}", new { id });
+});
+
+app.MapGet("/tasks", async (ITaskRepository taskRepository, CancellationToken ct) =>
+{
+    var tasks = await taskRepository.GetAllAsync(ct);
+    return Results.Ok(tasks);
 });
 
 app.MapGet("/tasks/{id}", async (Guid id, ITaskRepository taskRepository, CancellationToken ct) =>
