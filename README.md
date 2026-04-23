@@ -1,6 +1,8 @@
 # TaskOrchestrator
 
-🚀 **Live:** https://taskorchestrator-production-02e6.up.railway.app
+🚀 **Live Dashboard:** https://task-orchestrator-ks92u1tv2-judithyann971-5200s-projects.vercel.app/
+🔗 **API:** https://taskorchestrator-production-02e6.up.railway.app
+
 
 TaskOrchestrator is a backend project in C#/.NET where I learn and practice **backend engineering**, not just CRUD.
 This challenge is inspired by a real technical interview exercise I encountered a few months ago.
@@ -26,8 +28,11 @@ This is not meant to be production-ready, but to show how I think about **domain
 - **Async pipeline:** `Channel<T>` + `BackgroundService`
 - **In-memory store:** `ConcurrentDictionary`
 - **API:** Minimal API
-- **Frontend:** React (coming)
-- **Observability:** OpenTelemetry (coming)
+- **Frontend:** React + TypeScript, TanStack Query, Recharts — deployed on Vercel
+- **Observability:** OpenTelemetry — structured logs, metrics, distributed traces
+- **AI:** ITaskClassifier via Anthropic API (implemented, pending API key)
+- **Database:** PostgreSQL + EF Core — deployed on Railway
+- **Container:** Docker multi-stage build
 
 ---
 
@@ -53,14 +58,19 @@ The solution is structured in 4 main layers, following a DDD-inspired layered ar
   - `CancelTaskCommand` + `CancelTaskCommandHandler`
   - `ITaskRepository` — async interface with `CancellationToken`
   - `TaskChannels` — dual channel priority wrapper
-  - Coming: `ITaskClassifier`
+  - `ClassifyAndEnqueueTaskCommand` + `ClassifyAndEnqueueTaskCommandHandler`
+  - `ITaskClassifier` — async interface for AI task classification
+  - `TaskChannels` — dual channel priority wrapper
+  - `TaskMetrics` — OpenTelemetry metrics
+  - `TaskActivitySource` — distributed traces
 
 - `TaskOrchestrator.Infrastructure`  
   Infrastructure layer — concrete implementations:
   - `InMemoryTaskRepository` — `ConcurrentDictionary`, thread-safe (used for testing)
   - `EfCoreTaskRepository` — Entity Framework Core with SQLite persistence
   - `TaskWorker` — `BackgroundService`, 4 parallel workers, dual channel priority
-  - Coming: AI classifier via external API
+  - `AnthropicTaskClassifier` — `ITaskClassifier` implementation via Anthropic API (pending API key)
+  - `EfCoreTaskRepository` — Entity Framework Core with PostgreSQL  
 
 - `TaskOrchestrator.API`  
   Minimal API to pilot the system:
@@ -68,6 +78,8 @@ The solution is structured in 4 main layers, following a DDD-inspired layered ar
   - `GET /tasks/{id}` — inspect task state
   - `POST /tasks/{id}/restart` — manually restart a failed task
   - `POST /tasks/{id}/cancel` — cancel a pending task
+  - `POST /tasks/classify-and-enqueue` — AI classifies description and enqueues task (pending API key)
+  - `GET /tasks` — list all tasks 
   - Global exception middleware — `DomainException` → 400, unhandled → 500
 
 **Tests:**
@@ -125,16 +137,24 @@ GET /tasks/{id}
 
 ### V3 — Dashboard (React)
 
-- [ ] React dashboard — visualize tasks in near real time
-- [ ] Filters by type and status
-- [ ] Actions — retry and cancel from the UI
-- [ ] Error handling and edge case UX
+- [x] React dashboard — visualize tasks in near real time
+- [x] Filters by type and status
+- [x] Actions — retry and cancel from the UI
+- [x] Error handling and edge case UX
 
 ### V4 — Security
 - [ ] OAuth 2.0 / JWT authentication
 - [ ] Identity Provider — Keycloak (open source) or Azure AD
 - [ ] SSO (Single Sign-On)
 - [ ] API Key middleware for public endpoints
+
+### V5 — AI & Cloud
+- [x] ITaskClassifier interface — Application layer
+- [x] AnthropicTaskClassifier — Infrastructure layer
+- [x] POST /tasks/classify-and-enqueue endpoint
+- [ ] Anthropic API key — activate AI classification
+- [ ] AWS migration — ECS, RDS, SQS, CloudWatch
+- [ ] Terraform — infrastructure as code
 
 ---
 

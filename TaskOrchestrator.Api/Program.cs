@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Anthropic.SDK;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using OpenTelemetry.Metrics;
@@ -19,6 +20,11 @@ builder.Services.AddHostedService<TaskWorker>();
 builder.Services.AddScoped<EnqueueTaskCommandHandler>();
 builder.Services.AddScoped<RestartTaskCommandHandler>();
 builder.Services.AddScoped<CancelTaskCommandHandler>();
+builder.Services.AddScoped<ClassifyAndEnqueueTaskCommandHandler>();
+builder.Services.AddScoped<ITaskClassifier, AnthropicTaskClassifier>();
+
+var anthropicKey = Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY") ?? "dummy-key";
+builder.Services.AddSingleton(new AnthropicClient(anthropicKey));
 
 var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 string connectionString;
@@ -106,6 +112,12 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.MapPost("/tasks", async (EnqueueTaskCommand command, EnqueueTaskCommandHandler handler, CancellationToken ct) =>
+{
+    var id = await handler.HandleAsync(command, ct);
+    return Results.Created($"/tasks/{id}", new { id });
+});
+
+app.MapPost("/tasks/classify-and-enqueue", async (ClassifyAndEnqueueTaskCommand command, ClassifyAndEnqueueTaskCommandHandler handler, CancellationToken ct) =>
 {
     var id = await handler.HandleAsync(command, ct);
     return Results.Created($"/tasks/{id}", new { id });
