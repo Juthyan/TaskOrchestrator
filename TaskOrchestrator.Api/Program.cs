@@ -66,7 +66,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
             "http://localhost:5173",
-            "https://task-orchestrator-ks92u1tv2-judithyann971-5200s-projects.vercel.app"
+            "https://task-orchestrator-ks92u1tv2-judithyann971-5200s-projects.vercel.app",
+            "https://task-orchestrator-alpha.vercel.app"
             )
             .AllowAnyHeader()
             .AllowAnyMethod();
