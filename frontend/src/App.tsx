@@ -3,6 +3,7 @@ import { getAllTasks } from './api/tasks'
 import { TaskForm } from './components/TaskForm'
 import { TaskTable } from './components/TaskTable'
 import { TaskMetrics } from './components/TaskMetrics'
+import { TaskDescription } from './components/TaskDescription'
 
 
 function App() {
@@ -13,20 +14,17 @@ function App() {
   })
 
   return (
-    <div className="min-h-screen bg-base-200 p-8">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8">TaskOrchestrator</h1>
-        <TaskForm />
-        <TaskMetrics tasks={tasks ?? []} />
-        <div className="mt-8">
-          {isLoading ? (
-            <span className="loading loading-spinner loading-lg"></span>
-          ) : (
-            <TaskTable tasks={tasks ?? []} />
-          )}
-        </div>
-      </div>
-    </div>
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '1152px', margin: '0 auto' }}>
+  <h1 className="text-4xl font-bold">TaskOrchestrator</h1>
+    <TaskForm />
+    <TaskDescription />
+    <TaskMetrics tasks={tasks ?? []} />
+    {isLoading ? (
+        <span className="loading loading-spinner loading-lg"></span>
+    ) : (
+        <TaskTable tasks={tasks ?? []} />
+    )} 
+</div>
   )
 }
 

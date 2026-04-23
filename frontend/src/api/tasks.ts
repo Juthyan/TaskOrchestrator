@@ -50,3 +50,18 @@ export async function restartTask(id: string): Promise<{ id: string }> {
 
     return response.json();
 }
+
+export async function classifyAndEnqueueTask(description: string, maxAttempts: number): Promise<{ id: string }> {
+    const response = await fetch(`${API_URL}/tasks/classify-and-enqueue`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description, maxAttempts }),
+    });
+    
+    if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error);
+    }
+    
+    return response.json();
+}
