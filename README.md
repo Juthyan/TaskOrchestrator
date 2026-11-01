@@ -56,9 +56,8 @@ The solution is structured in 4 main layers, following a DDD-inspired layered ar
   - `EnqueueTaskCommand` + `EnqueueTaskCommandHandler`
   - `RestartTaskCommand` + `RestartTaskCommandHandler`
   - `CancelTaskCommand` + `CancelTaskCommandHandler`
-  - `ITaskRepository` — async interface with `CancellationToken`
-  - `TaskChannels` — dual channel priority wrapper
   - `ClassifyAndEnqueueTaskCommand` + `ClassifyAndEnqueueTaskCommandHandler`
+  - `ITaskRepository` — async interface with `CancellationToken`
   - `ITaskClassifier` — async interface for AI task classification
   - `TaskChannels` — dual channel priority wrapper
   - `TaskMetrics` — OpenTelemetry metrics
@@ -67,10 +66,9 @@ The solution is structured in 4 main layers, following a DDD-inspired layered ar
 - `TaskOrchestrator.Infrastructure`  
   Infrastructure layer — concrete implementations:
   - `InMemoryTaskRepository` — `ConcurrentDictionary`, thread-safe (used for testing)
-  - `EfCoreTaskRepository` — Entity Framework Core with SQLite persistence
+  - `EfCoreTaskRepository` — Entity Framework Core with PostgreSQL persistence
   - `TaskWorker` — `BackgroundService`, 4 parallel workers, dual channel priority
   - `AnthropicTaskClassifier` — `ITaskClassifier` implementation via Anthropic API (pending API key)
-  - `EfCoreTaskRepository` — Entity Framework Core with PostgreSQL  
 
 - `TaskOrchestrator.API`  
   Minimal API to pilot the system:
@@ -79,7 +77,7 @@ The solution is structured in 4 main layers, following a DDD-inspired layered ar
   - `POST /tasks/{id}/restart` — manually restart a failed task
   - `POST /tasks/{id}/cancel` — cancel a pending task
   - `POST /tasks/classify-and-enqueue` — AI classifies description and enqueues task (pending API key)
-  - `GET /tasks` — list all tasks 
+  - `GET /tasks` — list all tasks
   - Global exception middleware — `DomainException` → 400, unhandled → 500
 
 **Tests:**
@@ -93,18 +91,25 @@ The solution is structured in 4 main layers, following a DDD-inspired layered ar
 ## How it works
 
 ```
-POST /tasks
-    ↓
-EnqueueTaskCommandHandler
+POST /tasks                         POST /tasks/classify-and-enqueue
+    ↓                                   ↓
+    ↓                               ITaskClassifier → Simulation | Monitoring
+    ↓                                   ↓
+EnqueueTaskCommandHandler / ClassifyAndEnqueueTaskCommandHandler
     → creates OrchestratedTask (Pending)
     → saves to ITaskRepository
-    → writes to Channel<OrchestratedTask>
+    → Simulation → HighPriority channel
+    → Monitoring → LowPriority channel
+    (bounded channels, capacity 100 → backpressure)
     ↓
-TaskWorker (BackgroundService)
-    → reads from Channel
+TaskWorker (BackgroundService, 4 workers)
+    → reads HighPriority first, then LowPriority
     → Start() → UpdateAsync (Running)
     → executes work
-    → Succeed() or Fail() → UpdateAsync
+    → Succeed() → UpdateAsync
+    → or Fail() → UpdateAsync
+        → attempts left: Retry() → exponential backoff + jitter → re-enqueued
+        → attempts exhausted: stays Failed (manual POST /tasks/{id}/restart)
     ↓
 GET /tasks/{id}
     → returns current state from repository
@@ -124,12 +129,12 @@ GET /tasks/{id}
 - [x] Minimal API — `POST /tasks`, `GET /tasks/{id}`
 - [x] Priority — Simulation > Monitoring (two channels)
 - [x] Max concurrency — ≤ 4 workers in parallel
-- [x] `POST /tasks/{id}/retry` and `POST /tasks/{id}/cancel` endpoints
+- [x] `POST /tasks/{id}/restart` and `POST /tasks/{id}/cancel` endpoints
 - [x] Unit tests — domain invariants and application use cases
 
 ### V2 — Reliability and observability
 
-- [x] Persist tasks in a real store (SQLite / EF Core)
+- [x] Persist tasks in a real store (PostgreSQL / EF Core)
 - [x] Retry and backoff policy
 - [x] Structured logging — OpenTelemetry
 - [x] Metrics — tasks by status, latency, queue depth
