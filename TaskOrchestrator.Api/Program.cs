@@ -22,6 +22,8 @@ builder.Services.AddScoped<RestartTaskCommandHandler>();
 builder.Services.AddScoped<CancelTaskCommandHandler>();
 builder.Services.AddScoped<ClassifyAndEnqueueTaskCommandHandler>();
 builder.Services.AddScoped<ITaskClassifier, AnthropicTaskClassifier>();
+builder.Services.AddScoped<CompleteTaskCommandHandler>();
+builder.Services.AddScoped<FailTaskCommandHandler>();
 
 var anthropicKey = Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY") ?? "dummy-key";
 builder.Services.AddSingleton(new AnthropicClient(anthropicKey));
@@ -146,6 +148,20 @@ app.MapPost("/tasks/{id}/restart", async (Guid id, RestartTaskCommandHandler han
 app.MapPost("/tasks/{id}/cancel", async (Guid id, CancelTaskCommandHandler handler, CancellationToken ct) =>
 {
     var command = new CancelTaskCommand(id);
+    await handler.HandleAsync(command, ct);
+    return Results.NoContent();
+});
+
+app.MapPost("/tasks/{id}/complete", async (Guid id, CompleteTaskCommandHandler handler, ITaskRepository taskRepository, CancellationToken ct) =>
+{
+    var command = new CompleteTaskCommand(id);
+    await handler.HandleAsync(command, ct);
+    return Results.NoContent();
+});
+
+app.MapPost("/tasks/{id}/fail", async (Guid id, FailTaskCommandHandler handler, ITaskRepository taskRepository, CancellationToken ct) =>
+{
+    var command = new FailTaskCommand(id);
     await handler.HandleAsync(command, ct);
     return Results.NoContent();
 });
